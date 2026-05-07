@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Question Paper Generator</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script>
+        let counters = { secA: 1, secB: 1, secC: 1 };
+        let sectionCount = 3;
+
+        // ✅ NEW FUNCTION: CALCULATE TOTAL MARKS
+        function calculateTotalMarks() {
+            let total = 0;
+
+            let allMarks = document.querySelectorAll(".marks-input");
+
+            allMarks.forEach(m => {
+                let val = parseFloat(m.value);
+                if (!isNaN(val)) {
+                    total += val;
+                }
+            });
+
+            let display = document.getElementById("live_total_marks");
+            if (display) {
+                display.innerText = total;
+            }
+        }
+
+        // =========================
+        // ✅ NEW FEATURE: SAVE MULTIPLE PAPERS
+        // =========================
+
+        function savePaper() {
+            let paperName = prompt("Enter Paper Name:");
+            if (!paperName) return;
+
+            let form = document.querySelector("form");
+            let formData = new FormData(form);
+
+            let obj = {};
+            formData.forEach((value, key) => {
+                obj[key] = value;
+            });
+
+            let papers = JSON.parse(localStorage.getItem("papers")) || [];
+
+            papers.push({
+                name: paperName,
+                data: obj
+            });
+
+            localStorage.setItem("papers", JSON.stringify(papers));
+
+            alert("✅ Paper Saved Successfully!");
+        }
+
+        function showSavedPapers() {
+            let papers = JSON.parse(localStorage.getItem("papers")) || [];
+
+            if (papers.length === 0) {
+                alert("No saved papers found");
+                return;
+            }
+
+            let list = "Saved Papers:\n\n";
+
+            papers.forEach((p, index) => {
+                list += `${index + 1}. ${p.name}\n`;
+            });
+
+            let choice = prompt(list + "\nEnter number to load:");
+
+            let selected = papers[choice - 1];
+
+            if (selected) {
+                loadPaper(selected.data);
+            }
+        }
+
+        function loadPaper(data) {
+            for (let key in data) {
+                let field = document.querySelector(`[name="${key}"]`);
+                if (field) {
+                    field.value = data[key];
+                }
+            }
+
+            calculateTotalMarks();
+
+            alert("✅ Paper Loaded!");
+        }
+
+        function addQuestion(section) {
+
+            let lastIndex = counters[section] - 1;
+
+            if (lastIndex > 0) {
+                let lastMarks = document.querySelector(`[name="${section}_marks_${lastIndex}"]`);
+
+                if (lastMarks && lastMarks.value.trim() === "") {
+                    alert("⚠️ Please enter marks for previous question before adding new question");
+                    lastMarks.style.border = "2px solid red";
+                    lastMarks.focus();
+                    return;
+                }
+            }
+
+            if (!counters[section]) {
+                counters[section] = 1;
+            }
+
+            let container = document.getElementById(section + "_container");
+            let i = counters[section];
+
+            let html = `
+            <div class="question-box">
+                <h4>Question ${i}</h4>
+                
+                <!-- MAIN QUESTION -->
+                <select name="${section}_type_${i}" onchange="toggleOptions(this, '${section}', ${i})">
+                    <option value="direct">Direct Question</option>
+                    <option value="mcq">MCQ</option>
+                    </select>
+                    
+                    <div class="question-row">
+                        <span style="font-weight:bold; margin-right:8px;">${i}.</span>
+                        <textarea class="question-input" name="${section}_q_${i}" placeholder="Enter Question" rows="2" style="resize:vertical;"></textarea>
+                        <input class="marks-input" name="${section}_marks_${i}" placeholder="Marks" oninput="calculateTotalMarks()">
+                        </div>
+
+    <!-- IMAGE MAIN -->
+    <input type="file" name="${section}_img_${i}" accept="image/*">
+
+    <!-- MCQ OPTIONS MAIN -->
+    <div id="${section}_options_${i}" style="display:none;">
+        <input name="${section}_a_${i}" placeholder="Option A">
+        <input name="${section}_b_${i}" placeholder="Option B">
+        <input name="${section}_c_${i}" placeholder="Option C">
+        <input name="${section}_d_${i}" placeholder="Option D">
+    </div>
+
+        <!-- LINES -->
+    <div class="line-select" id="${section}_linebox_${i}" style="display:none;">
+        <select name="${section}_lines_${i}">
+            <option value="0">No Lines</option>
+            <option value="2">2 Lines</option>
+            <option value="3">3 Lines</option>
+            <option value="4">4 Lines</option>
+            <option value="5">5 Lines</option>
+        </select>
+    </div>
+
+
+    <!-- OR BUTTON -->
+    <button type="button" onclick="toggleOrQuestion('${section}', ${i})"
+    style="margin-top:5px; padding:4px 8px; font-size:12px; border-radius:5px; border:1px solid #ccc; background:#f5f5f5; color:black; cursor:pointer;">
+    + Add OR Question
+    </button>
+
+    <!-- OR BLOCK -->
+    <div id="${section}_orbox_${i}" style="display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+
+        <!-- OR DROPDOWN -->
+        <select name="${section}_or_type_${i}" onchange="toggleOrOptions(this)">
+            <option value="direct">Direct Question</option>
+            <option value="mcq">MCQ</option>
+        </select>
+
+        <!-- OR QUESTION -->
+        <textarea class="question-input" name="${section}_or_${i}" placeholder="OR Question" rows="2" style="resize:vertical;"></textarea>
+
+        <!-- OR IMAGE -->
+        <input type="file" name="${section}_or_img_${i}" accept="image/*">
+
+        <!-- OR MCQ OPTIONS -->
+        <div class="or-options" style="display:none;">
+            <input name="${section}_or_a_${i}" placeholder="Option A">
+            <input name="${section}_or_b_${i}" placeholder="Option B">
+            <input name="${section}_or_c_${i}" placeholder="Option C">
+            <input name="${section}_or_d_${i}" placeholder="Option D">
+        </div>
+            <!-- LINES -->
+    <div class="line-select" id="${section}_or_linebox_${i}" style="display:none;">
+        <select name="${section}_or_lines_${i}">
+            <option value="0">No Lines</option>
+            <option value="2">2 Lines</option>
+            <option value="3">3 Lines</option>
+            <option value="4">4 Lines</option>
+            <option value="5">5 Lines</option>
+        </select>
+    </div>
+
+    </div>
+
+</div>
+`;
+            container.insertAdjacentHTML("beforeend", html);
+            counters[section]++;
+
+            toggleLineDropdown();
+        }
+
+        function toggleOptions(select, section, i) {
+    let div = document.getElementById(section + "_options_" + i);
+
+    if (!div) return;
+
+    div.style.display = (select.value === "mcq") ? "block" : "none";
+}
+
+        function addSection() {
+
+            let allMarks = document.querySelectorAll(".marks-input");
+
+            for (let m of allMarks) {
+                if (m.value.trim() === "") {
+                    alert("⚠️ Please fill all marks before adding new section");
+                    m.style.border = "2px solid red";
+                    m.focus();
+                    return;
+                }
+            }
+
+            sectionCount++;
+
+            let sectionId = "extra" + sectionCount;
+            let container = document.getElementById("extra_sections");
+            let sectionLetter = String.fromCharCode(64 + sectionCount);
+
+            let html = `
+                <div class="section-block">
+                    <h3>Section ${sectionLetter}</h3>
+
+                    <div id="${sectionId}_container"></div>
+
+                    <button type="button" onclick="addQuestion('${sectionId}')">
+                        + Add Question
+                    </button>
+                </div>
+            `;
+
+            container.insertAdjacentHTML("beforeend", html);
+            counters[sectionId] = 1;
+        }
+
+        function toggleLineDropdown() {
+            let mode = document.getElementById("paper_mode").value;
+            let allLineBoxes = document.querySelectorAll(".line-select");
+
+            allLineBoxes.forEach(box => {
+                if (mode === "self") {
+                    box.style.display = "block";
+                } else {
+                    box.style.display = "none";
+                }
+            });
+        }
+
+        window.onload = function() {
+            toggleLineDropdown();
+        };
+
+        function previewPaper() {
+
+            if (!checkMarksBeforePreview()) {
+                return;
+            }
+        
+            let form = document.querySelector("form");
+            let formData = new FormData(form);
+
+            let obj = {};
+            formData.forEach((value, key) => {
+                obj[key] = value;
+            });
+
+            let win = window.open("", "_blank");
+
+            let html = `
+            <html>
+            <head>
+                <title>Preview</title>
+                <style>
+                    body { font-family: "Times New Roman"; padding: 30px; }
+                    .center { text-align: center; font-weight: bold; }
+                    .line { border-top: 2px solid black; margin: 10px 0; }
+                    .qrow { display: flex; justify-content: space-between; }
+                    .mcq { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+                    img { max-width: 400px; margin-top: 5px; }
+                </style>
+            </head>
+            <body>
+
+            <div class="center">${obj.school || ""}</div>
+            <div class="center">${obj.exam || ""}</div>
+            <div class="center"><strong>Subject: ${obj.subject || ""}</strong></div>
+
+            <div class="line"></div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                <div>
+                    <div>Class: ${obj.class || ""}</div>
+                    <div>Name: _______________________</div>
+                    <div>Roll No: __________</div>
+                </div>
+
+                <div style="text-align:right;">
+                    <div>Date: ${
+                        obj.date 
+                        ? new Date(obj.date).toLocaleDateString("en-GB").replace(/\//g, "-") 
+                        : ""
+                    }</div>
+                    <div>Time Allowed: ${obj.duration || ""}</div>
+                    <div>Max Marks: ${obj.marks || ""}</div>
+                </div>
+            </div>
+
+            <div class="line"></div>
+
+            <div class="center"><h3>General Instructions</h3></div>
+            ${(obj.instructions || "").split("\n").map(i => `<div>${i}</div>`).join("")}
+
+            <div style="border-top:2px solid black; margin:15px 0;"></div>
+            `;
+
+            let sections = new Set();
+
+            for (let key in obj) {
+                let match = key.match(/^(.+)_q_/);
+                if (match) {
+                    sections.add(match[1]);
+                }
+            }
+
+            sections = Array.from(sections);
+            let questionNumber = 1;
+            sections.forEach((sec, index) => {
+
+                let sectionName = "Section " + String.fromCharCode(65 + index);
+                html += `<h3 style="text-align:center;">${sectionName}</h3>`;
+
+                for(let i=1; i<50; i++){
+                    let q = obj[`${sec}_q_${i}`];
+                    if(!q) break;
+
+                    html += `
+                    <div style="margin-bottom:15px;">
+                        <div class="qrow">
+                            <div>
+                                ${(obj[`${sec}_sr_${i}`] || i)}. ${(q || "").replace(/\n/g, "<br>")}</div>
+                            <div>${obj[`${sec}_marks_${i}`] || ""}</div>
+                        </div>
+                    `;
+
+// MAIN IMAGE
+let fileInput = form.querySelector(`[name="${sec}_img_${i}"]`);
+if (fileInput && fileInput.files[0]) {
+    let imgURL = URL.createObjectURL(fileInput.files[0]);
+    html += `<div><img src="${imgURL}"></div>`;
+}
+
+// MAIN MCQ
+if(obj[`${sec}_type_${i}`] === "mcq"){
+    html += `<div class="mcq">
+        <div>a) ${obj[`${sec}_a_${i}`] || ""}</div>
+        <div>b) ${obj[`${sec}_b_${i}`] || ""}</div>
+        <div>c) ${obj[`${sec}_c_${i}`] || ""}</div>
+        <div>d) ${obj[`${sec}_d_${i}`] || ""}</div>
+    </div>`;
+}
+
+// ✅ OR BLOCK (ADD THIS HERE)
+let orQ = obj[`${sec}_or_${i}`];
+
+let orFileInput = form.querySelector(`[name="${sec}_or_img_${i}"]`);
+
+if(
+    (orQ && orQ.trim() !== "") || 
+    (orFileInput && orFileInput.files[0])
+){
+    html += `
+    <div style="text-align:center; font-weight:bold; margin:5px 0;">OR</div>
+    <div>${(orQ || "").replace(/\n/g, "<br>")}</div>
+    `;
+
+    // OR IMAGE
+    if (orFileInput && orFileInput.files[0]) {
+        let imgURL = URL.createObjectURL(orFileInput.files[0]);
+        html += `<div><img src="${imgURL}"></div>`;
+    }
+
+    // OR MCQ
+    if(obj[`${sec}_or_type_${i}`] === "mcq"){
+        html += `<div class="mcq">
+            <div>a) ${obj[`${sec}_or_a_${i}`] || ""}</div>
+            <div>b) ${obj[`${sec}_or_b_${i}`] || ""}</div>
+            <div>c) ${obj[`${sec}_or_c_${i}`] || ""}</div>
+            <div>d) ${obj[`${sec}_or_d_${i}`] || ""}</div>
+        </div>`;
+
+        // ✅ OR LINES (ADD THIS)
+let orLineCount = parseInt(obj[`${sec}_or_lines_${i}`] || 0);
+
+if(obj["paper_mode"] === "self" && orLineCount > 0){
+    html += `<div style="margin-top:10px;">`;
+
+    for(let l=0; l<orLineCount; l++){
+        html += `<div style="border-bottom:1px solid #000; margin:12px 0; height:22px;"></div>`;
+    }
+
+    html += `</div>`;
+    questionNumber++;
+}
+
+    }
+}
+                    let lineCount = parseInt(obj[`${sec}_lines_${i}`] || 0);
+
+                    if(obj["paper_mode"] === "self" && lineCount > 0){
+                        html += `<div style="margin-top:10px;">`;
+
+                        for(let l=0; l<lineCount; l++){
+                            html += `<div style="border-bottom:1px solid #000; margin:12px 0; height:22px;"></div>`;
+                        }
+
+                        html += `</div>`;
+                    }
+
+                    html += `</div>`;
+                }
+            });
+
+            html += `</body></html>`;
+            win.document.write(html);
+        }
+
+
+function checkMarksBeforePreview() {
+
+    let total = 0;
+
+    let allMarks = document.querySelectorAll(".marks-input");
+
+    allMarks.forEach(m => {
+        let val = parseFloat(m.value);
+        if (!isNaN(val)) {
+            total += val;
+        }
+    });
+
+    let maxMarks = parseFloat(document.querySelector('[name="marks"]')?.value || 0);
+
+    if (!maxMarks || maxMarks === 0) return true;
+
+    if (total < maxMarks) {
+        alert("⚠️ Your Total marks is less than Max marks");
+    }
+    else if (total > maxMarks) {
+        alert("❌ Your Total Marks is greater than Max marks");
+    }
+
+    return true; // allow preview always
+}
+
+function toggleOrQuestion(section, i) {
+    let orBox = document.getElementById(section + "_orbox_" + i);
+
+    if (orBox.style.display === "none") {
+        orBox.style.display = "block";
+    } else {
+        orBox.style.display = "none";
+    }
+}
+
+
+// ✅ ADD THIS FUNCTION HERE
+function toggleOrOptions(select) {
+    let orBox = select.closest('[id*="_orbox_"]'); 
+    let optionsDiv = orBox.querySelector(".or-options");
+
+    if (!optionsDiv) return;
+
+    optionsDiv.style.display = (select.value === "mcq") ? "block" : "none";
+}
+
+document.addEventListener("input", function(e) {
+    if (e.target.classList.contains("question-input")) {
+        e.target.style.height = "auto";
+        e.target.style.height = e.target.scrollHeight + "px";
+    }
+});
+
+    </script>
+
+</head>
+<body style="position:relative;">
+   
+<div class="container">
+    <h2>Question Paper Generator</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <!-- ✅ LIVE TOTAL BOX -->
+        <div style="position:sticky; top:0; background:#fff; padding:10px; margin-bottom:15px; border:2px solid #007bff; border-radius:8px; text-align:center; font-weight:bold;">
+            Total Marks Entered: <span id="live_total_marks">0</span>
+        </div>
+
+        <h3>Header Details</h3>
+
+        <div class="grid-container">
+            <p style="font-weight:bold;">School: ADANI SCHOOLS</p><input type="hidden" name="school" value="ADANI SCHOOLS">
+            <input name="exam" placeholder="Exam Name">
+            <input name="class" placeholder="Class">
+
+            <input name="subject" placeholder="Subject">
+            <input name="duration" placeholder="Duration">
+            <input name="marks" placeholder="Max Marks">
+            <input type="date" name="date">
+        </div>
+
+        <h3>Paper Settings</h3>
+        <div class="grid-container">
+            <select name="paper_mode" id="paper_mode" onchange="toggleLineDropdown()">
+                <option value="normal">Normal Paper</option>
+                <option value="self">Self Paper</option>
+            </select>
+
+            <div id="line_container" style="display:none;">
+                <select name="line_count" id="line_count">
+                    <option value="2">2 Lines</option>
+                    <option value="3" selected>3 Lines</option>
+                    <option value="4">4 Lines</option>
+                    <option value="5">5 Lines</option>
+                </select>
+            </div>
+        </div>
+
+        <h3>Instructions</h3>
+        <textarea name="instructions"></textarea>
+
+        <h3>Section A</h3>
+        <div id="secA_container"></div>
+        <button type="button" onclick="addQuestion('secA')">+ Add Question</button>
+
+        <h3>Section B</h3>
+        <div id="secB_container"></div>
+        <button type="button" onclick="addQuestion('secB')">+ Add Question</button>
+
+        <h3>Section C</h3>
+        <div id="secC_container"></div>
+        <button type="button" onclick="addQuestion('secC')">+ Add Question</button>
+
+        <div id="extra_sections"></div>
+
+        <button type="button" onclick="addSection()" style="margin-top:15px;">
+            + Add Section
+        </button>
+
+        <div class="buttons">
+            <button type="button" onclick="previewPaper()">view_Paper</button>
+
+            <div style="margin-top:8px; font-size:12px; color:gray;">
+                Created by Dipesh Dubey
+            </div>
+        </div>
+
+    
+
+    </form>
+</div>
+
+</body>
+</html>

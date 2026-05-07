@@ -1,0 +1,126 @@
+body {
+    font-family: Arial;
+    background: #f4f4f4;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+.container {
+    width: 60%;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    margin-top: 30px;
+    border-radius: 10px;
+}
+
+/* =========================
+   HEADINGS
+========================= */
+h2 {
+    text-align: center;
+}
+
+h3 {
+    margin-top: 15px;      /* reduced from 20px */
+    margin-bottom: 5px;    /* added to reduce gap below heading */
+}
+
+/* =========================
+   HEADER GRID
+========================= */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.grid-container input {
+    width: 100%;
+    height: 35px;
+    font-size: 14px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+/* =========================
+   INPUTS
+========================= */
+input, textarea {
+    margin: 6px 0;   /* reduced spacing */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* TEXTAREA FIX */
+textarea {
+    width: 100%;
+    height: 80px;
+    margin-top: 4px;   /* tighter spacing under heading */
+}
+
+/* =========================
+   QUESTION BOX
+========================= */
+.question-box {
+    background: #fafafa;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* QUESTION + MARKS ROW */
+.question-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* QUESTION INPUT */
+.question-input {
+    width: 85%;
+}
+
+/* MARKS INPUT */
+.marks-input {
+    width: 70px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* ADD QUESTION BUTTON */
+button[type="button"] {
+    background: #28a745;
+}
+
+button[type="button"]:hover {
+    background: #1e7e34;
+}
+

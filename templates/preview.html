@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Paper</title>
+    <style>
+        body {
+            font-family: "Times New Roman";
+            padding: 30px;
+        }
+
+        .center {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .line {
+            border-top: 2px solid black;
+            margin: 10px 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .qrow {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mcq {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="center">{{data.school}}</div>
+<div class="center">{{data.exam}}</div>
+
+<div class="line"></div>
+
+<div class="row">
+    <div>Max Marks: {{data.marks}}</div>
+    <div>Class: {{data.class}}</div>
+</div>
+
+<div class="row">
+    <div>Duration: {{data.duration}}</div>
+    <div>Date:</div>
+</div>
+
+<div class="row">
+    <div>Subject: {{data.subject}}</div>
+</div>
+
+<br>
+
+<div>Name of Student:</div><br>
+<div>Roll No:</div>
+<div>Date:</div>
+
+<div class="line"></div>
+
+<h3>General Instructions</h3>
+
+{% for line in data.instructions.split("\n") %}
+    {% if line %}
+        <div>{{line}}</div>
+    {% endif %}
+{% endfor %}
+
+<!-- SECTIONS -->
+{% for sec in ['secA','secB','secC'] %}
+<h3 style="text-align:center;">Section {{loop.index}}</h3>
+
+{% for i in range(1,50) %}
+{% set q = data.get(sec ~ '_q_' ~ i|string) %}
+{% if q %}
+
+<div class="question">
+    <div class="qrow">
+        <div>{{i}}. {{q}}</div>
+        <div>{{data.get(sec ~ '_marks_' ~ i|string)}}</div>
+    </div>
+
+    {% if data.get(sec ~ '_type_' ~ i|string) == 'mcq' %}
+    <div class="mcq">
+        <div>a) {{data.get(sec ~ '_a_' ~ i|string)}}</div>
+        <div>b) {{data.get(sec ~ '_b_' ~ i|string)}}</div>
+        <div>c) {{data.get(sec ~ '_c_' ~ i|string)}}</div>
+        <div>d) {{data.get(sec ~ '_d_' ~ i|string)}}</div>
+    </div>
+    {% endif %}
+</div>
+
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+
+</body>
+</html>
